@@ -1,0 +1,3 @@
+
+class NoMoreProfilesException(Exception):
+    pass
