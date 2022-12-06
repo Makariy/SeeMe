@@ -10,6 +10,7 @@ class SECTION(Enum):
     SEARCH_FOR_PROFILES = "SEARCH_FOR_PROFILES"
     EDIT_PROFILE = "EDIT_PROFILE"
     NOT_LOGGED = "NOT_LOGGED"
+    PROFILE_PRESENTATION = "PROFILE_PRESENTATION"
 
 
 class BaseStateData(BaseModel):
@@ -20,8 +21,8 @@ class ProfileData(BaseStateData):
     name: str
     surname: str
     age: int
-    sex: str      # One of SEXES
-    target: str   # One of SEXES
+    sex: str  # One of SEXES
+    target: str  # One of SEXES
     location: Point
     description: str
     image_id: str
@@ -51,14 +52,30 @@ class ChooseSectionData(BaseStateData):
     pass
 
 
+class NoMoreProfilesException(Exception):
+    pass
+
+
 class SearchForProfilesData(BaseStateData):
     offset: int = 0
     current_profile: int
     search_list_ids: List[int]
 
+    def pop_next_profile(self) -> int:
+        if len(self.search_list_ids) == 0:
+            raise NoMoreProfilesException()
+        profile_id = self.search_list_ids[0]
+        self.search_list_ids.remove(profile_id)
+        self.current_profile = profile_id
+        return profile_id
+
 
 class CreateProfileData(ProfileData):
     telegram_id: int
+
+
+class ProfilePresentationData(BaseStateData):
+    pass
 
 
 class EditProfileData(ProfileData):
@@ -72,7 +89,8 @@ DATA_TO_SECTION_MAPPING = {
     ChooseSectionData: SECTION.CHOOSE_SECTION,
     SearchForProfilesData: SECTION.SEARCH_FOR_PROFILES,
     CreateProfileData: SECTION.NOT_LOGGED,
-    EditProfileData: SECTION.EDIT_PROFILE
+    EditProfileData: SECTION.EDIT_PROFILE,
+    ProfilePresentationData: SECTION.PROFILE_PRESENTATION
 }
 
 
@@ -87,4 +105,3 @@ class State(BaseModel):
             section = DATA_TO_SECTION_MAPPING[data_type]
             return {"section": section, **value}
         return value
-

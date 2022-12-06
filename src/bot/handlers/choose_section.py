@@ -6,22 +6,27 @@ from state import State, SECTION
 from database.services import get_client_by_telegram_id
 from cache.services import set_state_by_telegram_id
 
-from .utils import create_search_for_profiles_state_by_client, create_edit_profiles_state_by_client
+from .utils import (
+    create_search_for_profiles_state_by_client,
+    create_edit_profiles_state_by_client,
+    create_profile_presentation_state
+)
 from ..translator import T, MESSAGES
 
 
 SECTION_TO_TEXT_MAPPING = {
     SECTION.SEARCH_FOR_PROFILES: "1",
     SECTION.EDIT_PROFILE: "2",
+    SECTION.PROFILE_PRESENTATION: "3"
 }
 
 
 async def get_choose_section_keyboard() -> ReplyKeyboardMarkup:
     buttons = [
-        [KeyboardButton(SECTION_TO_TEXT_MAPPING[SECTION.SEARCH_FOR_PROFILES])],
-        [KeyboardButton(SECTION_TO_TEXT_MAPPING[SECTION.EDIT_PROFILE])],
+        [KeyboardButton(SECTION_TO_TEXT_MAPPING[SECTION.SEARCH_FOR_PROFILES]), KeyboardButton(SECTION_TO_TEXT_MAPPING[SECTION.EDIT_PROFILE])],
+        [KeyboardButton(SECTION_TO_TEXT_MAPPING[SECTION.PROFILE_PRESENTATION])],
     ]
-    return ReplyKeyboardMarkup(keyboard=buttons, one_time_keyboard=True)
+    return ReplyKeyboardMarkup(keyboard=buttons, one_time_keyboard=True, resize_keyboard=True)
 
 
 async def get_chosen_section_by_update(update: Update) -> Optional[SECTION]:
@@ -32,7 +37,7 @@ async def get_chosen_section_by_update(update: Update) -> Optional[SECTION]:
             return section
 
 
-async def save_chosen_section(section: SECTION, update: Update, context: ContextTypes.DEFAULT_TYPE) -> State:
+async def save_chosen_section(section: SECTION, update: Update, _: ContextTypes.DEFAULT_TYPE) -> State:
     telegram_id = update.message.from_user.id
     client = await get_client_by_telegram_id(telegram_id)
 
@@ -41,9 +46,11 @@ async def save_chosen_section(section: SECTION, update: Update, context: Context
         state = await create_search_for_profiles_state_by_client(client)
     elif section is SECTION.EDIT_PROFILE:
         state = await create_edit_profiles_state_by_client(client)
+    elif section is SECTION.PROFILE_PRESENTATION:
+        state = await create_profile_presentation_state()
 
     if state is None:
-        raise ValueError("State was None")
+        raise ValueError("There was an unimplemented state")
     await set_state_by_telegram_id(telegram_id, state)
     return state
 

@@ -4,12 +4,11 @@ from telegram.ext import ContextTypes
 from telegram import KeyboardButton, ReplyKeyboardMarkup
 
 from models import Client
-from state import State, SearchForProfilesData, ChooseSectionData
+from state import State, SearchForProfilesData
 from cache.services import set_state_by_telegram_id
 from database.services import get_client_by_id, get_client_by_telegram_id, get_nearest_clients_ids
 
-from .exceptions import NoMoreProfilesException
-from .utils import handle_exceptions
+from .utils import handle_exceptions, get_profile_presentation, create_choose_section_state
 
 from ..translator import T, MESSAGES
 
@@ -29,11 +28,9 @@ async def get_keyboard_for_profile_search() -> ReplyKeyboardMarkup:
 async def send_profile_presentation(profile: Client, bot: Bot, chat_id: int):
     keyboard = await get_keyboard_for_profile_search()
     await bot.send_photo(
-        photo=profile.image_id,
-        caption=f"{profile.name}  {profile.surname}, {profile.age}\n"
-                f"{profile.description}",
         reply_markup=keyboard,
         chat_id=chat_id,
+        **await get_profile_presentation(profile)
     )
 
 
@@ -47,27 +44,22 @@ async def update_search_list_if_needed(state: State, telegram_id: int):
 
 
 async def send_next_profile(state: State, update: Update, context: ContextTypes.DEFAULT_TYPE):
-    data: SearchForProfilesData = state.data
-    if len(data.search_list_ids) == 0:
-        raise NoMoreProfilesException()
-
-    profile_id = data.search_list_ids[0]
-    data.search_list_ids.remove(profile_id)
-    data.current_profile = profile_id
-    profile = await get_client_by_id(profile_id)
-
     telegram_id = update.message.from_user.id
+
+    data: SearchForProfilesData = state.data
+    profile_id = data.pop_next_profile()
+    profile = await get_client_by_id(profile_id)
 
     await send_profile_presentation(profile, context.bot, telegram_id)
     await update_search_list_if_needed(state, telegram_id=telegram_id)
 
 
 async def like_client(client_to: Client, client_from: Client, bot: Bot, lang: str):
-    await bot.send_message(
+    await bot.send_photo(
         chat_id=705021151,  # client_to.chat_id
-        text=T(MESSAGES.SOMEONE_LIKED_YOUR_PROFILE, lang=lang) \
+        photo=client_from.image_id,
+        caption=T(MESSAGES.SOMEONE_LIKED_YOUR_PROFILE, lang=lang) \
             .format(profile=f"[{client_from.name}](tg://user?id={client_from.telegram_id})"),
-        disable_web_page_preview=True,
         parse_mode='MarkdownV2'
     )
 
@@ -84,7 +76,7 @@ async def handle_search_for_profiles(state: State, update: Update, context: Cont
     elif message == MessageResponse.DISLIKE.value:
         ...
     elif message == MessageResponse.SLEEP.value:
-        state = State(data=ChooseSectionData())
+        state = await create_choose_section_state()
         await set_state_by_telegram_id(telegram_id, state)
         return state
 

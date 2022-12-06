@@ -12,7 +12,6 @@ from .utils import (
     ask_to_enter_field,
     format_error,
     update_state_by_client_message,
-    cast_message_for_field,
     handle_validation_errors,
     create_search_for_profiles_state_by_client
 )
@@ -47,7 +46,6 @@ async def handle_not_logged(_: State, update: Update, context: ContextTypes.DEFA
     # so I need to explicitly construct it myself
     state = await get_not_validated_state_by_telegram_id(telegram_id, data_type=CreateProfileData)
     if not await is_update_is_start(update):
-        from .utils import update_state_by_client_message
         null_field = state.data.get_unfilled_field()
         state = await update_state_by_client_message(state, update.message, null_field)
 

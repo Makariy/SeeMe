@@ -1,16 +1,17 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from state import CreateProfileData, State, SECTION
+from state import State, SECTION
 from database.services import get_client_by_telegram_id
 from cache.services import set_state_by_telegram_id, get_state_by_telegram_id
 
-from .handlers.utils import create_search_for_profiles_state_by_client
+from .handlers.utils import create_search_for_profiles_state_by_client, create_create_profile_state_by_telegram_id
 
 from .handlers.choose_section import handle_choose_section
 from .handlers.search_for_profiles import handle_search_for_profiles
 from .handlers.not_logged import handle_not_logged
 from .handlers.edit_profile import handle_edit_profile
+from .handlers.profile_presentation import handle_profile_presentation
 
 from bot.translator import T, MESSAGES
 
@@ -31,6 +32,8 @@ async def handle_message_by_state(state: State, update: Update, context: Context
         await _handle_message_by_state_if_state_returned(handle_search_for_profiles, state, update, context)
     elif state.section == SECTION.EDIT_PROFILE:
         await _handle_message_by_state_if_state_returned(handle_edit_profile, state, update, context)
+    elif state.section == SECTION.PROFILE_PRESENTATION:
+        await _handle_message_by_state_if_state_returned(handle_profile_presentation, state, update, context)
 
 
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,7 +55,7 @@ async def handle_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     telegram_id = update.message.from_user.id
     client = await get_client_by_telegram_id(telegram_id)
     if client is None:
-        state = State(data=CreateProfileData.construct(telegram_id=telegram_id))
+        state = await create_create_profile_state_by_telegram_id(telegram_id)
     else:
         state = await create_search_for_profiles_state_by_client(client)
 

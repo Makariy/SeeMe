@@ -42,7 +42,7 @@ _TRANSLATIONS = {
                                              "Have a nice day \n"
                                              "\(if this doesn't work out, go hit the Gym\)\.",
         MESSAGES.CHOOSE_SECTION: "Choose what would you like to to",
-        MESSAGES.CHOOSE_SECTION_OPTIONS: "1 - Search for profiles\n2 - Edit profile",
+        MESSAGES.CHOOSE_SECTION_OPTIONS: "1 - Search for profiles\n2 - Edit profile\n3 - Watch your profile presentation",
         MESSAGES.PROFILE_UPDATED_SUCCESSFULLY: "Your profile was updated successfully",
 
 
@@ -64,7 +64,7 @@ _TRANSLATIONS = {
                                              "Хорошего дня \n"
                                              "\(Если у тебя не получится, попробуй гим\)\.",
         MESSAGES.CHOOSE_SECTION: "Выбери чтобы тебе хотелось сделать",
-        MESSAGES.CHOOSE_SECTION_OPTIONS: "1 - Смотреть профили\n2 - Редактировать свой профиль",
+        MESSAGES.CHOOSE_SECTION_OPTIONS: "1 - Смотреть профили\n2 - Редактировать свой профиль\n3 - Посмотреть свой профиль",
         MESSAGES.PROFILE_UPDATED_SUCCESSFULLY: "Ваш профиль был успешно отредактирован",
 
         ERRORS.VALIDATION: "Произошла ошибка: {error.args[0]}",
